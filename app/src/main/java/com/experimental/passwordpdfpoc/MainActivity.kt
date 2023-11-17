@@ -1,18 +1,26 @@
 package com.experimental.passwordpdfpoc
 
+import android.app.DownloadManager
+import android.content.ClipData
 import android.content.Context
+import android.content.Intent
+import android.database.Cursor
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.util.Base64
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import com.google.gson.Gson
 import com.pdfview.PDFView
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
-import java.io.OutputStream
 
 
 class MainActivity : AppCompatActivity() {
@@ -26,13 +34,13 @@ class MainActivity : AppCompatActivity() {
 
         val decodedBytes: ByteArray = Base64.decode(data.responseData.pdf, Base64.DEFAULT)
         val pdf = PDDocument.load(
-            decodedBytes,
-            data.responseData.pdfkey
+            decodedBytes, data.responseData.pdfkey
         )
 
         pdf.isAllSecurityToBeRemoved = true
 
-        val decryptedFile = File(this.cacheDir, "decrypted${System.currentTimeMillis()}.pdf")
+        val publicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val decryptedFile = File(publicDir, "decrypted${System.currentTimeMillis()}.pdf")
         pdf.save(decryptedFile)
         pdf.close()
 
@@ -40,9 +48,21 @@ class MainActivity : AppCompatActivity() {
         v.fromFile(decryptedFile)
         v.show()
 
+        val btn: Button = findViewById(R.id.btn_share)
+        btn.setOnClickListener {
+            shareFile(decryptedFile)
+        }
     }
 
-    fun readRawContent(resourceId: Int): String? {
+    private fun shareFile(privateFile: File) {
+        val fileUri = FileProvider.getUriForFile(this, "$packageName.provider", privateFile)
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri)
+        //shareIntent.setType("application/pdf")
+        shareIntent.setDataAndType(fileUri, "application/*")
+        startActivity(Intent.createChooser(shareIntent, "Share PDF file"))
+    }
+    private fun readRawContent(resourceId: Int): String? {
         val context: Context = this
         try {
             val resources = context.resources
