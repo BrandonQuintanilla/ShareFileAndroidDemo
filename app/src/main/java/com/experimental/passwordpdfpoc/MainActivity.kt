@@ -2,7 +2,9 @@ package com.experimental.passwordpdfpoc
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Base64
 import androidx.appcompat.app.AppCompatActivity
+import com.google.gson.Gson
 import com.pdfview.PDFView
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import java.io.BufferedReader
@@ -19,21 +21,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        /*
         val mjson = readRawContent(R.raw.jsondata)
-
         val data: ResponseModel = Gson().fromJson(mjson, ResponseModel::class.java)
 
-
+        val decodedBytes: ByteArray = Base64.decode(data.responseData.pdf, Base64.DEFAULT)
         val pdf = PDDocument.load(
-            data.responseData.pdf.trim().toByteArray(),
+            decodedBytes,
             data.responseData.pdfkey
-        )
-        */
-        val rawFile = getRawFileAsFile(R.raw.jsondata)
-        val pdf = PDDocument.load(
-            rawFile,
-           "CUMJ930415"
         )
 
         pdf.isAllSecurityToBeRemoved = true
@@ -44,54 +38,12 @@ class MainActivity : AppCompatActivity() {
 
         val v: PDFView = findViewById(R.id.pdfView)
         v.fromFile(decryptedFile)
-        /* val v: PDFView = findViewById(R.id.pdfView)
-         v
-             .fromBytes(data.responseData.pdf.toByteArray())
-             .password(data.responseData.password)
-             .load()
-         */
-        /*
+        v.show()
 
-        val wv:WebView = findViewById(R.id.main_web_view)
-
-
-
-        //val pd =PdfDocument()
-        val base64EncodedPDF = "data:application/pdf;base64,${data.responseData.pdf}"
-        //val password = "mypassword"
-        val dataURL = "$base64EncodedPDF#password=${data.responseData.password}"
-
-        wv.settings.javaScriptEnabled = true
-        wv.loadUrl(dataURL)*/
-    }
-
-    fun getRawFileAsFile(resourceId: Int): File? {
-        val context: Context = this // Replace 'this' with your activity or application context
-        try {
-            val resources = context.resources
-            val inputStream = resources.openRawResource(resourceId)
-            val fileName = resources.getResourceEntryName(resourceId)
-            val file = File(context.filesDir, fileName)
-            val outputStream: OutputStream = FileOutputStream(file)
-            val buffer = ByteArray(4096)
-            var length: Int
-            while (inputStream.read(buffer).also { length = it } > 0) {
-                outputStream.write(buffer, 0, length)
-            }
-            inputStream.close()
-            outputStream.close()
-            if (file.exists()) {
-                return file
-            }
-        } catch (e: IOException) {
-            // Handle any exceptions that occur during reading, writing, or closing the streams
-            e.printStackTrace()
-        }
-        return null // Return null if there was an error during the file operations
     }
 
     fun readRawContent(resourceId: Int): String? {
-        val context: Context = this // Replace 'this' with your activity or application context
+        val context: Context = this
         try {
             val resources = context.resources
             val inputStream = resources.openRawResource(resourceId)
